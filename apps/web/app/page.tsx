@@ -666,6 +666,21 @@ export default function ChatUI() {
     return () => resizeObserver.disconnect();
   }, []);
 
+  // 新規メッセージが追加された時だけ最下部へ自動スクロールする
+  // （修正・翻訳結果を既存メッセージへ後から差し込む更新では件数が変わらないため発火しない）
+  const prevMessagesLengthRef = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevMessagesLengthRef.current) {
+      const container = messagesContainerRef.current;
+      if (container) {
+        requestAnimationFrame(() => {
+          container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+        });
+      }
+    }
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages]);
+
   // 会話履歴の初期化: LocalStorageの読み込み完了を待ってから、
   // URLの?conversation=<id>、なければ直前に開いていた会話、
   // どちらもなければ新規会話を復元・作成する（一度だけ実行）
