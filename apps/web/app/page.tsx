@@ -60,6 +60,10 @@ export default function ChatUI() {
   const autoPlayedTranslationsRef = useRef<Set<string>>(new Set());
   const waitingForAIResponseRef = useRef<boolean>(false);
   const messagesRef = useRef<Message[]>(messages);
+  // フッターの実際の高さを計測し、メッセージ一覧の下余白に反映する
+  // （固定値だと端末のセーフエリアやフォント設定によりボタンがフッターに隠れることがあるため）
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(144);
   const [autoBlurText, setAutoBlurText] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
   const [input, setInput] = useState("");
@@ -637,6 +641,20 @@ export default function ChatUI() {
     messagesRef.current = messages;
   }, [messages]);
 
+  // フッターの高さ変化（セーフエリアや表示状態の違い）を監視し、
+  // メッセージ一覧の下余白がフッターと常に一致するようにする
+  useEffect(() => {
+    const footerEl = footerRef.current;
+    if (!footerEl) return;
+
+    const updateHeight = () => setFooterHeight(footerEl.offsetHeight);
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(footerEl);
+    return () => resizeObserver.disconnect();
+  }, []);
+
   // 会話履歴の初期化: LocalStorageの読み込み完了を待ってから、
   // URLの?conversation=<id>、なければ直前に開いていた会話、
   // どちらもなければ新規会話を復元・作成する（一度だけ実行）
@@ -1165,7 +1183,10 @@ export default function ChatUI() {
           }
         `}</style>
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-6 pb-36 space-y-6">
+        <div
+          className="flex-1 overflow-y-auto p-6 space-y-6"
+          style={{ paddingBottom: footerHeight + 24 }}
+        >
           {messages.map((message) => (
             <div
               key={message.id}
@@ -1483,7 +1504,10 @@ export default function ChatUI() {
       </div>
 
       {/* Voice Input Area - 独立したコンテナ */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-4xl border-t bg-white p-6 pb-safe z-20">
+      <div
+        ref={footerRef}
+        className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-4xl border-t bg-white p-6 pb-safe z-20"
+      >
         <div className="flex justify-center items-center">
           {/* Left side - Text input button */}
           <div className="absolute left-6">
