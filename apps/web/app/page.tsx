@@ -196,12 +196,26 @@ export default function ChatUI() {
     }
   };
 
-  const translateToEnglish = async (text: string): Promise<string | null> => {
+  // 主語・代名詞の解決に使う直近の会話履歴を組み立てる
+  const CONTEXT_MESSAGE_LIMIT = 6;
+  const buildTranslationContext = (
+    history: Message[]
+  ): { role: "user" | "assistant"; content: string }[] => {
+    return history.slice(-CONTEXT_MESSAGE_LIMIT).map((m) => ({
+      role: m.role,
+      content: m.translatedContent || m.content,
+    }));
+  };
+
+  const translateToEnglish = async (
+    text: string,
+    context?: { role: "user" | "assistant"; content: string }[]
+  ): Promise<string | null> => {
     try {
       const response = await fetch("/api/translate-to-english", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, context }),
       });
 
       if (!response.ok) {
@@ -331,7 +345,10 @@ export default function ChatUI() {
           correctedContent = (await correctEnglish(result.text)) || undefined;
         } else if (isJapanese(result.text)) {
           translatedContent =
-            (await translateToEnglish(result.text)) || undefined;
+            (await translateToEnglish(
+              result.text,
+              buildTranslationContext(messages)
+            )) || undefined;
         }
 
         // 認識されたテキストでメッセージを作成
@@ -691,7 +708,11 @@ export default function ChatUI() {
     if (isEnglish(userInput)) {
       correctedContent = (await correctEnglish(userInput)) || undefined;
     } else if (isJapanese(userInput)) {
-      translatedContent = (await translateToEnglish(userInput)) || undefined;
+      translatedContent =
+        (await translateToEnglish(
+          userInput,
+          buildTranslationContext(messages)
+        )) || undefined;
     }
 
     // ユーザーメッセージを作成
@@ -878,10 +899,16 @@ export default function ChatUI() {
         return newMap;
       });
 
+      const messageIndex = messages.findIndex((m) => m.id === messageId);
+      const context =
+        messageIndex >= 0
+          ? buildTranslationContext(messages.slice(0, messageIndex))
+          : undefined;
+
       const response = await fetch("/api/translate-to-japanese", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: content }),
+        body: JSON.stringify({ text: content, context }),
       });
 
       if (!response.ok) {
