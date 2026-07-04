@@ -1,22 +1,21 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Download, X } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Download, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 export function PWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Service Worker の登録は ServiceWorkerRegister コンポーネントで行うため削除
-
     // PWA インストールプロンプトの処理
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -29,19 +28,22 @@ export function PWAInstall() {
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
-      console.log('PWA がインストールされました');
+      console.log("PWA がインストールされました");
     };
 
     // PWAがすでにインストールされているかチェック
     const checkIfInstalled = () => {
       // display-mode: standalone の場合はインストール済み
-      if (window.matchMedia('(display-mode: standalone)').matches) {
+      if (window.matchMedia("(display-mode: standalone)").matches) {
         setIsInstalled(true);
         return;
       }
-      
+
       // iOS Safari での「ホーム画面に追加」チェック
-      if ('standalone' in window.navigator && (window.navigator as any).standalone) {
+      if (
+        "standalone" in window.navigator &&
+        (window.navigator as any).standalone
+      ) {
         setIsInstalled(true);
         return;
       }
@@ -49,12 +51,15 @@ export function PWAInstall() {
 
     checkIfInstalled();
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
@@ -64,16 +69,16 @@ export function PWAInstall() {
     try {
       await deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
-        console.log('ユーザーがインストールを承諾しました');
+
+      if (choiceResult.outcome === "accepted") {
+        console.log("ユーザーがインストールを承諾しました");
       } else {
-        console.log('ユーザーがインストールを拒否しました');
+        console.log("ユーザーがインストールを拒否しました");
       }
     } catch (error) {
-      console.error('インストールエラー:', error);
+      console.error("インストールエラー:", error);
     }
-    
+
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
   };
@@ -112,11 +117,7 @@ export function PWAInstall() {
         </button>
       </div>
       <div className="mt-3 flex space-x-2">
-        <Button
-          onClick={handleInstallClick}
-          size="sm"
-          className="flex-1"
-        >
+        <Button onClick={handleInstallClick} size="sm" className="flex-1">
           インストール
         </Button>
         <Button

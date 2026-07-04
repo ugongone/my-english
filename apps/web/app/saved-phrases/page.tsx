@@ -3,25 +3,15 @@
 import React, { useState, useCallback } from "react";
 import { useBookmark } from "@/lib/bookmark-context";
 import { Button } from "@/components/ui/button";
-import {
-  Trash2,
-  Copy,
-  Volume2,
-  VolumeX,
-  Bookmark,
-} from "lucide-react";
-
+import { Trash2, Copy, Volume2, VolumeX, Bookmark } from "lucide-react";
 
 export default function SavedPhrasesPage() {
   const { savedPhrases, removeBookmark } = useBookmark();
   const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
   const [playbackSpeed] = useState(1.0); // 固定速度で実装
 
-
   // ブックマーク関連のフレーズを取得（過去の修正・翻訳も含む）
   const bookmarkedPhrases = savedPhrases;
-
-
 
   const handleDelete = (id: string) => {
     removeBookmark(id);
@@ -31,37 +21,35 @@ export default function SavedPhrasesPage() {
     navigator.clipboard.writeText(content);
   };
 
-  const handleTextToSpeech = useCallback(async (
-    phraseId: string, 
-    text: string
-  ) => {
-    try {
-      setIsPlaying((prev) => ({ ...prev, [phraseId]: true }));
+  const handleTextToSpeech = useCallback(
+    async (phraseId: string, text: string) => {
+      try {
+        setIsPlaying((prev) => ({ ...prev, [phraseId]: true }));
 
-      const { ttsPlayer } = await import('@/lib/audio-player');
-      
-      await ttsPlayer.speak(text, playbackSpeed, {
-        onStart: () => {
-          setIsPlaying((prev) => ({ ...prev, [phraseId]: true }));
-        },
-        onEnd: () => {
-          setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
-        },
-        onError: (error) => {
-          console.error("TTS error:", error);
-          setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
-        }
-      });
-    } catch (error) {
-      console.error("TTS error:", error);
-      setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
-    }
-  }, [playbackSpeed]);
+        const { ttsPlayer } = await import("@/lib/audio-player");
 
+        await ttsPlayer.speak(text, playbackSpeed, {
+          onStart: () => {
+            setIsPlaying((prev) => ({ ...prev, [phraseId]: true }));
+          },
+          onEnd: () => {
+            setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
+          },
+          onError: (error) => {
+            console.error("TTS error:", error);
+            setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
+          },
+        });
+      } catch (error) {
+        console.error("TTS error:", error);
+        setIsPlaying((prev) => ({ ...prev, [phraseId]: false }));
+      }
+    },
+    [playbackSpeed]
+  );
 
   return (
     <div className="flex flex-col h-screen max-w-4xl mx-auto bg-white">
-
       {/* Phrases List */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {bookmarkedPhrases.length === 0 ? (
@@ -121,7 +109,9 @@ export default function SavedPhrasesPage() {
                       variant="ghost"
                       size="sm"
                       className="h-9 w-9 p-0 hover:bg-gray-100 touch-manipulation"
-                      onClick={() => handleTextToSpeech(phrase.id, phrase.content)}
+                      onClick={() =>
+                        handleTextToSpeech(phrase.id, phrase.content)
+                      }
                       disabled={isPlaying[phrase.id]}
                     >
                       {isPlaying[phrase.id] ? (
