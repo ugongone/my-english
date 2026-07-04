@@ -13,7 +13,7 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1-hd',
+        model: 'gpt-4o-mini-tts',
         voice: 'alloy',
         input: text,
         speed: Math.max(0.25, Math.min(4.0, speed)),

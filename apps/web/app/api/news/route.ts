@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       throw new Error("Invalid story data");
     }
 
-    // GPT-4.1-mini で要約とタイトル生成
+    // GPT-5-nano で要約とタイトル生成
     const summaryPrompt = `Hey! I found this interesting tech story. Here's what I came across:
 
 Title: ${story.title}
@@ -73,19 +73,19 @@ Please give me:
 Make it sound like you're telling a friend about something interesting you just discovered!`;
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-5-nano",
       messages: [
         {
           role: "system",
           content: "You're a tech-savvy friend who loves sharing cool discoveries! Write in a casual, friendly tone. Start with 'TITLE:' followed by a specific headline, then 'SUMMARY:' with your explanation.",
         },
         {
-          role: "user", 
+          role: "user",
           content: summaryPrompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 500,
+      max_completion_tokens: 500,
+      reasoning_effort: "minimal",
     });
 
     const summary = completion.choices[0]?.message?.content;

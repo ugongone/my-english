@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     console.log(`Translating Japanese text to English: "${text}"`);
 
     const response = await client.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
           content: text,
         },
       ],
-      temperature: 0.1,
-      max_tokens: 512,
+      max_completion_tokens: 512,
+      reasoning_effort: "minimal",
     });
 
     const translatedText = response.choices[0]?.message?.content?.trim();

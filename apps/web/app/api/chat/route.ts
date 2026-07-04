@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
         },
         ...messages,
       ],
-      temperature: 0.7,
-      max_tokens: 1000,
+      max_completion_tokens: 1000,
+      reasoning_effort: "minimal",
     });
 
     const assistantMessage = completion.choices[0]?.message;
