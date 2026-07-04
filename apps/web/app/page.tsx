@@ -399,10 +399,13 @@ export default function ChatUI() {
     try {
       setIsAIResponding(true);
 
-      const conversationHistory = [
+      const conversationHistory: Pick<
+        Message,
+        "role" | "content" | "translatedContent"
+      >[] = [
         ...messages,
         {
-          role: "user" as const,
+          role: "user",
           content: userMessage,
         },
       ];
@@ -413,9 +416,12 @@ export default function ChatUI() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          // 日本語入力のユーザーメッセージは英訳(translatedContent)を使う。
+          // ここでcontent（原文の日本語）を送ると会話履歴に日本語が混ざり、
+          // AIが英語ではなく日本語で返答してしまう不具合があった
           messages: conversationHistory.map((msg) => ({
             role: msg.role,
-            content: msg.content,
+            content: msg.translatedContent || msg.content,
           })),
         }),
       });
