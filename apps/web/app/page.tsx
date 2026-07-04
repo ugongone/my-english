@@ -1608,6 +1608,7 @@ export default function ChatUI() {
                       className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}
                       autoFocus
+                      enterKeyHint="send"
                     />
                     <div className="flex justify-end gap-2">
                       <Button
