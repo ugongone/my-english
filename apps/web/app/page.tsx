@@ -64,6 +64,7 @@ export default function ChatUI() {
   // （固定値だと端末のセーフエリアやフォント設定によりボタンがフッターに隠れることがあるため）
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(144);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [autoBlurText, setAutoBlurText] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
   const [input, setInput] = useState("");
@@ -949,6 +950,26 @@ export default function ChatUI() {
     [getTranslation]
   );
 
+  // 翻訳吹き出しが固定フッターの背後に隠れないよう、必要な分だけスクロールする
+  const scrollTranslationIntoView = (messageId: string) => {
+    requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+      const box = container?.querySelector<HTMLElement>(
+        `[data-translation-box="${messageId}"]`
+      );
+      if (!container || !box) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const boxRect = box.getBoundingClientRect();
+      const visibleBottom = containerRect.bottom - footerHeight - 16;
+      const overflow = boxRect.bottom - visibleBottom;
+
+      if (overflow > 0) {
+        container.scrollTop += overflow;
+      }
+    });
+  };
+
   const handleTranslateMessage = async (messageId: string, content: string) => {
     // 翻訳を非表示にする場合
     if (translatedMessages.has(messageId)) {
@@ -967,6 +988,7 @@ export default function ChatUI() {
         newSet.add(messageId);
         return newSet;
       });
+      scrollTranslationIntoView(messageId);
       return;
     }
 
@@ -1015,6 +1037,7 @@ export default function ChatUI() {
         newSet.add(messageId);
         return newSet;
       });
+      scrollTranslationIntoView(messageId);
     } catch (error) {
       console.error("Translation error:", error);
       
@@ -1032,6 +1055,7 @@ export default function ChatUI() {
         newSet.add(messageId);
         return newSet;
       });
+      scrollTranslationIntoView(messageId);
     } finally {
       setTranslatingMessages((prev) => {
         const newSet = new Set(prev);
@@ -1184,6 +1208,7 @@ export default function ChatUI() {
         `}</style>
         {/* Chat Messages */}
         <div
+          ref={messagesContainerRef}
           className="flex-1 overflow-y-auto p-6 space-y-6"
           style={{ paddingBottom: footerHeight + 24 }}
         >
@@ -1422,7 +1447,10 @@ export default function ChatUI() {
 
                   {/* 翻訳されたコンテンツの表示 */}
                   {message.role === "assistant" && translatedMessages.has(message.id) && (
-                    <div className="mt-2 rounded-lg p-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm max-w-full">
+                    <div
+                      data-translation-box={message.id}
+                      className="mt-2 rounded-lg p-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm max-w-full"
+                    >
                       <div className="flex items-start gap-2">
                         <Languages className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="whitespace-pre-line flex-1">
