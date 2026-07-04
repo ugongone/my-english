@@ -75,12 +75,47 @@ export default function SavedPhrasesPage() {
                 className="rounded-lg border border-gray-200 bg-white p-4 sm:p-5 transition-all duration-200 hover:shadow-md hover:border-blue-300"
               >
                 <div className="space-y-3">
-                  {/* Category and Timestamp */}
-                  <div className="flex items-center gap-2">
-                    <Bookmark className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                    <span className="text-xs text-gray-500">
-                      {phrase.timestamp}
-                    </span>
+                  {/* Category, Timestamp and Action Buttons */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Bookmark className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                      <span className="text-xs text-gray-500">
+                        {phrase.timestamp}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-gray-100 touch-manipulation"
+                        onClick={() => handleCopy(phrase.content)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-gray-100 touch-manipulation"
+                        onClick={() =>
+                          handleTextToSpeech(phrase.id, phrase.content)
+                        }
+                        disabled={isPlaying[phrase.id]}
+                      >
+                        {isPlaying[phrase.id] ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-red-100 text-red-600 touch-manipulation"
+                        onClick={() => handleDelete(phrase.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Content */}
@@ -96,41 +131,6 @@ export default function SavedPhrasesPage() {
                     <div className="text-gray-700 leading-relaxed text-sm sm:text-base">
                       {phrase.content}
                     </div>
-                  </div>
-
-                  {/* Action Buttons - Mobile optimized */}
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 p-0 hover:bg-gray-100 touch-manipulation"
-                      onClick={() => handleCopy(phrase.content)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 p-0 hover:bg-gray-100 touch-manipulation"
-                      onClick={() =>
-                        handleTextToSpeech(phrase.id, phrase.content)
-                      }
-                      disabled={isPlaying[phrase.id]}
-                    >
-                      {isPlaying[phrase.id] ? (
-                        <VolumeX className="h-4 w-4" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 p-0 hover:bg-red-100 text-red-600 touch-manipulation"
-                      onClick={() => handleDelete(phrase.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               </div>
