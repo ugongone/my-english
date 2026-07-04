@@ -340,6 +340,23 @@ export default function ChatUI() {
           return;
         }
 
+        // 修正・翻訳の完了を待たず、認識されたテキストを先に表示する
+        const messageId = Date.now().toString();
+        const newMessage: Message = {
+          id: messageId,
+          role: "user",
+          content: result.text,
+          originalContent: result.text,
+          timestamp: new Date().toLocaleTimeString('ja-JP', {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: 'Asia/Tokyo'
+          }),
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
         // 英語の場合は修正処理、日本語の場合は英訳処理を実行
         let correctedContent: string | undefined;
         let translatedContent: string | undefined;
@@ -357,23 +374,16 @@ export default function ChatUI() {
             )) || undefined;
         }
 
-        // 認識されたテキストでメッセージを作成
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          role: "user",
-          content: result.text,
-          correctedContent,
-          translatedContent,
-          originalContent: result.text,
-          timestamp: new Date().toLocaleTimeString('ja-JP', {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-            timeZone: 'Asia/Tokyo'
-          }),
-        };
-
-        setMessages((prev) => [...prev, newMessage]);
+        // 修正・翻訳結果が揃ったら、表示済みのメッセージに反映する
+        if (correctedContent || translatedContent) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? { ...m, correctedContent, translatedContent }
+                : m
+            )
+          );
+        }
 
         // AI応答を生成（日本語の場合は英訳を使用）
         await generateAIResponse(translatedContent || result.text);
@@ -782,6 +792,23 @@ export default function ChatUI() {
     setInput("");
     setShowTextInput(false);
 
+    // 修正・翻訳の完了を待たず、ユーザーメッセージを先に表示する
+    const messageId = Date.now().toString();
+    const newMessage: Message = {
+      id: messageId,
+      role: "user",
+      content: userInput,
+      originalContent: userInput,
+      timestamp: new Date().toLocaleTimeString('ja-JP', {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: 'Asia/Tokyo'
+      }),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+
     // 英語の場合は修正処理、日本語の場合は英訳処理を実行
     let correctedContent: string | undefined;
     let translatedContent: string | undefined;
@@ -796,23 +823,14 @@ export default function ChatUI() {
         )) || undefined;
     }
 
-    // ユーザーメッセージを作成
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: userInput,
-      correctedContent,
-      translatedContent,
-      originalContent: userInput,
-      timestamp: new Date().toLocaleTimeString('ja-JP', {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: 'Asia/Tokyo'
-      }),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
+    // 修正・翻訳結果が揃ったら、表示済みのメッセージに反映する
+    if (correctedContent || translatedContent) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, correctedContent, translatedContent } : m
+        )
+      );
+    }
 
     // AI応答を生成（日本語の場合は英訳を使用）
     await generateAIResponse(translatedContent || userInput);
