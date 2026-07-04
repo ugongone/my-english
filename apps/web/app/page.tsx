@@ -852,10 +852,13 @@ export default function ChatUI() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      // Enterキーでの自動送信を無効化（明示的な送信ボタンクリックのみで送信）
-    }
+    if (e.key !== "Enter" || e.shiftKey) return;
+
+    // 日本語IME変換確定のEnterでは送信しない（keyCode 229は変換中を示す値）
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+
+    e.preventDefault();
+    handleSend();
   };
 
   const handleBookmark = (
