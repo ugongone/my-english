@@ -1,37 +1,19 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#60A5FA"/>
-      <stop offset="1" stop-color="#2563EB"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="196" y1="150" x2="316" y2="330" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#3B82F6"/>
-      <stop offset="1" stop-color="#1D4ED8"/>
+      <stop offset="0" stop-color="#818CF8"/>
+      <stop offset="1" stop-color="#4338CA"/>
     </linearGradient>
   </defs>
 
   <!-- 背景（角丸スクエア） -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- チャット吹き出し -->
-  <path d="M120 96h272c30.9 0 56 25.1 56 56v152c0 30.9-25.1 56-56 56H214l-64 58c-8.5 7.7-22 1.7-22-9.8V360h-8c-30.9 0-56-25.1-56-56V152c0-30.9 25.1-56 56-56Z" fill="white"/>
+  <!-- 奥の吹き出し（会話の相手） -->
+  <rect x="82" y="92" width="272" height="188" rx="52" fill="white" opacity="0.45"/>
+  <path d="M118 272 L86 328 L168 276 Z" fill="white" opacity="0.45"/>
 
-  <!-- マイク -->
-  <rect x="224" y="164" width="64" height="108" rx="32" fill="url(#accent)"/>
-  <path d="M196 240v12c0 33.1 26.9 60 60 60s60-26.9 60-60v-12" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
-  <path d="M256 312v28" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
-  <path d="M228 340h56" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
-
-  <!-- 音声波形（左） -->
-  <path d="M172 208a68 68 0 0 0 0 64" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"/>
-  <path d="M146 188a100 100 0 0 0 0 104" stroke="url(#accent)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
-
-  <!-- 音声波形（右） -->
-  <path d="M340 208a68 68 0 0 1 0 64" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"/>
-  <path d="M366 188a100 100 0 0 1 0 104" stroke="url(#accent)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
-
-  <!-- リフレッシュバッジ -->
-  <circle cx="382" cy="128" r="58" fill="url(#bg)" stroke="white" stroke-width="10"/>
-  <path d="M360 108a30 30 0 1 1-7 32" stroke="white" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <path d="M356 96v20h20" stroke="white" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 手前の吹き出し（自分） -->
+  <rect x="164" y="232" width="272" height="188" rx="52" fill="white"/>
+  <path d="M400 404 L434 456 L354 408 Z" fill="white"/>
 </svg>
