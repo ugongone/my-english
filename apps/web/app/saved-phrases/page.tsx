@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useBookmark } from "@/lib/bookmark-context";
+import { ttsPlayer } from "@/lib/audio-player";
 import { Button } from "@/components/ui/button";
 import { Trash2, Copy, Volume2, VolumeX, Bookmark } from "lucide-react";
 
@@ -23,10 +24,12 @@ export default function SavedPhrasesPage() {
 
   const handleTextToSpeech = useCallback(
     async (phraseId: string, text: string) => {
+      // iOSはfetch等の非同期処理を挟むと再生がブロックされることがあるため、
+      // タップ直後（awaitの前）に同期的に再生許可を確保しておく
+      ttsPlayer.primeMobilePlayback();
+
       try {
         setIsPlaying((prev) => ({ ...prev, [phraseId]: true }));
-
-        const { ttsPlayer } = await import("@/lib/audio-player");
 
         await ttsPlayer.speak(text, playbackSpeed, {
           onStart: () => {

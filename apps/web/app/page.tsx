@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useBookmark, createSavedPhraseFromMessage } from "@/lib/bookmark-context";
+import { ttsPlayer } from "@/lib/audio-player";
 import { Button } from "@/components/ui/button";
 import { CorrectionDisplay } from "@/components/ui/correction-display";
 import { PWAInstall } from "@/components/pwa-install";
@@ -522,11 +523,13 @@ export default function ChatUI() {
     text: string, 
     customOptions?: { onEnd?: () => void; onStart?: () => void; onError?: (error: Error) => void }
   ) => {
+    // iOSはfetch等の非同期処理を挟むと再生がブロックされることがあるため、
+    // タップ直後（awaitの前）に同期的に再生許可を確保しておく
+    ttsPlayer.primeMobilePlayback();
+
     try {
       setIsPlaying((prev) => ({ ...prev, [messageId]: true }));
 
-      const { ttsPlayer } = await import('@/lib/audio-player');
-      
       await ttsPlayer.speak(text, playbackSpeed, {
         onStart: () => {
           setIsPlaying((prev) => ({ ...prev, [messageId]: true }));

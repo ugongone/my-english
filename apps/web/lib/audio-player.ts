@@ -3,18 +3,25 @@ import { audioCache } from './utils'
 // デバイス検知ユーティリティ
 class DeviceDetector {
   static isMobile(): boolean {
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') return false
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
            window.innerWidth < 768
   }
-  
+
   static isIOS(): boolean {
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') return false
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
   }
-  
+
   static isAndroid(): boolean {
+    if (typeof navigator === 'undefined') return false
     return /Android/i.test(navigator.userAgent)
   }
 }
+
+// iOSでボタンタップ直後（非同期処理を挟む前）に無音を再生し、ユーザー操作起点の再生許可をこの<audio>要素に固定するためのデータURI
+const SILENT_AUDIO_SRC =
+  'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA=='
 
 // モバイル専用デバッグログ
 class MobileAudioLogger {
@@ -234,6 +241,7 @@ export class TTSPlayer {
   private isLoading = false
   private useWebAudio = true
   private currentStreamAudio: HTMLAudioElement | null = null
+  private mobileAudioEl: HTMLAudioElement | null = null
 
   // デバイス別再生戦略の決定
   constructor() {
@@ -241,6 +249,27 @@ export class TTSPlayer {
       this.useWebAudio = false
       MobileAudioLogger.log('Constructor', 'Mobile detected - Audio API will be used')
     }
+  }
+
+  // モバイルでボタンタップ直後（fetch等の非同期処理より前）に呼び出す
+  // iOSはユーザー操作から離れた再生（play()）をブロックすることがあるため、
+  // タップの瞬間に無音を再生してこの<audio>要素にユーザー操作起点の再生許可を紐付けておく
+  primeMobilePlayback(): void {
+    if (!DeviceDetector.isMobile()) return
+
+    MobileAudioLogger.log('Prime Mobile Playback', 'Playing silent audio to anchor user gesture')
+
+    if (!this.mobileAudioEl) {
+      this.mobileAudioEl = new Audio()
+      if (DeviceDetector.isIOS()) {
+        (this.mobileAudioEl as any).playsInline = true
+      }
+    }
+
+    this.mobileAudioEl.src = SILENT_AUDIO_SRC
+    this.mobileAudioEl.play().catch(() => {
+      // 無音再生自体の失敗は無視する（目的はユーザー操作の紐付けのみ）
+    })
   }
 
   // TTS APIから音声を取得（キャッシュ優先、速度別対応）
@@ -338,15 +367,17 @@ export class TTSPlayer {
   // モバイル専用の音声再生
   private async mobileAudioPlay(blob: Blob, options: AudioPlayerOptions): Promise<void> {
     MobileAudioLogger.log('Mobile Audio Play Start', { blobSize: blob.size })
-    
+
     return new Promise((resolve, reject) => {
       const audioUrl = URL.createObjectURL(blob)
-      const audio = new Audio(audioUrl)
-      
+      // primeMobilePlayback()でユーザー操作起点の再生許可を得た要素があれば使い回す
+      const audio = this.mobileAudioEl ?? new Audio()
+      this.mobileAudioEl = audio
+
       // モバイル最適化設定
       audio.preload = 'auto'
       audio.volume = 1.0
-      
+
       // iOSでの追加設定
       if (DeviceDetector.isIOS()) {
         (audio as any).playsInline = true
@@ -355,7 +386,7 @@ export class TTSPlayer {
       audio.addEventListener('canplaythrough', () => {
         MobileAudioLogger.log('Audio Can Play Through', 'Ready to play')
         options.onStart?.()
-        
+
         audio.play()
           .then(() => {
             MobileAudioLogger.log('Audio Play Success', 'Playing started')
@@ -364,21 +395,22 @@ export class TTSPlayer {
             MobileAudioLogger.log('Audio Play Error', playError, true)
             this.handleMobileAudioError(audioUrl, playError, options, reject)
           })
-      })
+      }, { once: true })
 
       audio.addEventListener('ended', () => {
         MobileAudioLogger.log('Audio Ended', 'Playback completed')
         URL.revokeObjectURL(audioUrl)
         options.onEnd?.()
         resolve()
-      })
+      }, { once: true })
 
       audio.addEventListener('error', (errorEvent) => {
         MobileAudioLogger.log('Audio Error Event', errorEvent, true)
         this.handleMobileAudioError(audioUrl, new Error('Audio element error'), options, reject)
-      })
+      }, { once: true })
 
-      // 読み込み開始
+      // 読み込み開始（primeで設定した無音srcを実際の音声に差し替える）
+      audio.src = audioUrl
       audio.load()
     })
   }
@@ -536,6 +568,11 @@ export class TTSPlayer {
   // リソースクリーンアップ
   dispose(): void {
     this.audioPlayer.dispose()
+    if (this.mobileAudioEl) {
+      this.mobileAudioEl.pause()
+      this.mobileAudioEl.src = ''
+      this.mobileAudioEl = null
+    }
   }
 }
 
