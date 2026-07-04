@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useBookmark, createSavedPhraseFromMessage } from "@/lib/bookmark-context";
+import { useConversation, type Message } from "@/lib/conversation-context";
 import { ttsPlayer } from "@/lib/audio-player";
 import { Button } from "@/components/ui/button";
 import { CorrectionDisplay } from "@/components/ui/correction-display";
@@ -22,32 +23,32 @@ import {
   Bookmark,
   Languages,
   MessageCircle,
+  MessageSquarePlus,
   Briefcase,
   Newspaper,
 } from "lucide-react";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  correctedContent?: string;
-  translatedContent?: string;
-  timestamp: string;
-  type?: "news" | "chat";
-  currentIndex?: number;
-  totalStories?: number;
-  originalContent?: string;
-}
+const createInitialMessages = (): Message[] => [
+  {
+    id: "initial",
+    role: "assistant",
+    content: "Hey! What should we do?",
+    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+  },
+];
 
 export default function ChatUI() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "initial",
-      role: "assistant",
-      content: "Hey! What should we do?",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(createInitialMessages);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const hasInitializedConversationRef = useRef(false);
+  const {
+    isLoaded: isConversationsLoaded,
+    activeConversationId,
+    setActiveConversationId,
+    createConversation,
+    saveMessages,
+    getConversation,
+  } = useConversation();
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -629,6 +630,61 @@ export default function ChatUI() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // 会話履歴の初期化: LocalStorageの読み込み完了を待ってから、
+  // URLの?conversation=<id>、なければ直前に開いていた会話、
+  // どちらもなければ新規会話を復元・作成する（一度だけ実行）
+  useEffect(() => {
+    if (!isConversationsLoaded || hasInitializedConversationRef.current) return;
+    hasInitializedConversationRef.current = true;
+
+    const requestedId = new URLSearchParams(window.location.search).get(
+      "conversation"
+    );
+    const idToLoad = requestedId || activeConversationId;
+    const existing = idToLoad ? getConversation(idToLoad) : undefined;
+
+    if (existing) {
+      setMessages(existing.messages);
+      setConversationId(existing.id);
+      setActiveConversationId(existing.id);
+    } else {
+      const created = createConversation(messagesRef.current);
+      setConversationId(created.id);
+      setActiveConversationId(created.id);
+    }
+
+    if (requestedId) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [
+    isConversationsLoaded,
+    activeConversationId,
+    getConversation,
+    createConversation,
+    setActiveConversationId,
+  ]);
+
+  // メッセージが変化するたびに現在の会話をLocalStorageへ自動保存する
+  useEffect(() => {
+    if (!conversationId) return;
+    saveMessages(conversationId, messages);
+    // saveMessagesはContextの再レンダリングのたびに参照が変わるため、
+    // 依存配列に含めると無限ループになる。messages変化時のみ実行する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, messages]);
+
+  // 現在の会話を保存した上で、新しい会話を開始する
+  const handleNewConversation = useCallback(() => {
+    const initialMessages = createInitialMessages();
+    const created = createConversation(initialMessages);
+    setMessages(initialMessages);
+    setConversationId(created.id);
+    setActiveConversationId(created.id);
+    setCurrentNewsIndex(0);
+    setDetectedLanguage("");
+    setShowSettingsMenu(false);
+  }, [createConversation, setActiveConversationId]);
 
   // Auto-play TTS for user message translations when autoPlayAudio is enabled
   useEffect(() => {
@@ -1489,6 +1545,14 @@ export default function ChatUI() {
               {/* Settings menu items - slide up animation */}
               {showSettingsMenu && (
                 <div className="absolute bottom-16 right-0 flex flex-col gap-2 animate-slide-up">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-12 w-12 p-0 shadow-md"
+                    onClick={handleNewConversation}
+                  >
+                    <MessageSquarePlus className="h-5 w-5" />
+                  </Button>
                   <Button
                     variant={autoPlayAudio ? "default" : "outline"}
                     size="sm"

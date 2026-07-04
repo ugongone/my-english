@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AppLayout } from "@/components/ui/app-layout";
 import { BookmarkProvider } from "@/lib/bookmark-context";
+import { ConversationProvider } from "@/lib/conversation-context";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 const geistSans = localFont({
@@ -42,10 +43,12 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <BookmarkProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <ServiceWorkerRegister />
+          <ConversationProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+            <ServiceWorkerRegister />
+          </ConversationProvider>
         </BookmarkProvider>
       </body>
     </html>
