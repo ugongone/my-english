@@ -1459,6 +1459,26 @@ export default function ChatUI() {
               </div>
             </div>
           ))}
+
+          {/* AI応答生成中のタイピングインジケーター（フッターの高さを変えないよう吹き出しで表現） */}
+          {isAIResponding && (
+            <div className="flex justify-start">
+              <div className="flex max-w-[80%] flex-row">
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-gray-900">Bob</span>
+                  </div>
+                  <div className="rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1608,16 +1628,14 @@ export default function ChatUI() {
             </div>
           </div>
         </div>
-        {isTranscribing && (
-          <p className="text-center text-sm text-blue-600 mt-3 animate-pulse">
-            Analyzing voice... / 音声を解析中...
-          </p>
-        )}
-        {detectedLanguage &&
-          !isRecording &&
-          !isTranscribing &&
-          !isAIResponding && (
-            <p className="text-center text-xs text-gray-500 mt-1">
+        {/* 状態表示は高さ固定のスロットにまとめ、表示/非表示でフッターの高さが変わらないようにする */}
+        <div className="mt-3 flex items-center justify-center h-5">
+          {isTranscribing ? (
+            <p className="text-sm text-blue-600 animate-pulse">
+              Analyzing voice... / 音声を解析中...
+            </p>
+          ) : detectedLanguage && !isRecording && !isAIResponding ? (
+            <p className="text-xs text-gray-500">
               Detected:{" "}
               {detectedLanguage === "japanese"
                 ? "日本語"
@@ -1625,12 +1643,8 @@ export default function ChatUI() {
                   ? "English"
                   : detectedLanguage}
             </p>
-          )}
-        {isAIResponding && (
-          <p className="text-center text-sm text-blue-600 mt-3 animate-pulse">
-            AI generating response... / AI が回答を生成中...
-          </p>
-        )}
+          ) : null}
+        </div>
       </div>
 
       {showSpeedControl && (
