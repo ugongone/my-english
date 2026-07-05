@@ -198,7 +198,7 @@ export default function SavedPhrasesPage() {
                     value={newPhraseJapanese}
                     onChange={(e) => setNewPhraseJapanese(e.target.value)}
                     placeholder="でも、かろうじてポテチ買ってある。"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div className="space-y-1">
@@ -207,7 +207,7 @@ export default function SavedPhrasesPage() {
                     value={newPhraseEnglish}
                     onChange={(e) => setNewPhraseEnglish(e.target.value)}
                     placeholder="But I barely managed to buy some potato chips."
-                    className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={2}
                     autoFocus
                   />
